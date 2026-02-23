@@ -38,6 +38,7 @@ func (s *URLService) Shorten(rawURL string, customCode string) (repository.URL, 
 	if code == "" {
 		code = s.generateCode(6)
 	} else {
+		// Verifica se o código customizado já existe
 		if _, err := s.repo.FindByCode(code); err == nil {
 			return repository.URL{}, ErrCodeConflict
 		}
@@ -72,6 +73,10 @@ func (s *URLService) Stats(code string) (repository.URL, error) {
 
 func (s *URLService) ListAll() []repository.URL {
 	return s.repo.ListAll()
+}
+
+func (s *URLService) Delete(code string) error {
+	return s.repo.Delete(code)
 }
 
 func (s *URLService) generateCode(length int) string {

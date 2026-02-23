@@ -18,6 +18,7 @@ type URLRepository interface {
 	FindByCode(code string) (URL, error)
 	IncrementClicks(code string) error
 	ListAll() []URL
+	Delete(code string) error
 }
 
 type InMemoryRepository struct {
@@ -71,4 +72,15 @@ func (r *InMemoryRepository) ListAll() []URL {
 		list = append(list, url)
 	}
 	return list
+}
+
+func (r *InMemoryRepository) Delete(code string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, ok := r.urls[code]; !ok {
+		return ErrNotFound
+	}
+	delete(r.urls, code)
+	return nil
 }

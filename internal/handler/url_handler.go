@@ -12,14 +12,14 @@ import (
 )
 
 type URLHandler struct {
-	svc *service.URLService
+	svc     *service.URLService
+	baseURL string
 }
 
-func NewURLHandler(svc *service.URLService) *URLHandler {
-	return &URLHandler{svc: svc}
+func NewURLHandler(svc *service.URLService, baseURL string) *URLHandler {
+	return &URLHandler{svc: svc, baseURL: baseURL}
 }
 
-// POST /shorten
 func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		URL        string `json:"url"`
@@ -47,11 +47,10 @@ func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusCreated, map[string]string{
 		"code":         entry.Code,
 		"original_url": entry.OriginalURL,
-		"short_url":    r.Host + "/" + entry.Code,
+		"short_url":    h.baseURL + "/" + entry.Code,
 	})
 }
 
-// GET /{code} - redireciona para a URL original
 func (h *URLHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 
@@ -68,7 +67,6 @@ func (h *URLHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, entry.OriginalURL, http.StatusMovedPermanently)
 }
 
-// GET /stats/{code}
 func (h *URLHandler) Stats(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 
@@ -89,8 +87,22 @@ func (h *URLHandler) Stats(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GET /urls
 func (h *URLHandler) ListAll(w http.ResponseWriter, r *http.Request) {
 	urls := h.svc.ListAll()
 	response.JSON(w, http.StatusOK, urls)
+}
+
+func (h *URLHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+
+	if err := h.svc.Delete(code); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			response.Error(w, http.StatusNotFound, "short URL not found")
+			return
+		}
+		response.Error(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
