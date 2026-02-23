@@ -28,9 +28,7 @@ func NewURLService(repo repository.URLRepository) *URLService {
 	}
 }
 
-// Shorten cria um código curto para a URL fornecida
 func (s *URLService) Shorten(rawURL string, customCode string) (repository.URL, error) {
-	// Valida a URL
 	parsed, err := url.ParseRequestURI(rawURL)
 	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
 		return repository.URL{}, ErrInvalidURL
@@ -40,7 +38,6 @@ func (s *URLService) Shorten(rawURL string, customCode string) (repository.URL, 
 	if code == "" {
 		code = s.generateCode(6)
 	} else {
-		// Verifica se o código customizado já existe
 		if _, err := s.repo.FindByCode(code); err == nil {
 			return repository.URL{}, ErrCodeConflict
 		}
@@ -58,7 +55,6 @@ func (s *URLService) Shorten(rawURL string, customCode string) (repository.URL, 
 	return entry, nil
 }
 
-// Resolve retorna a URL original e incrementa os cliques
 func (s *URLService) Resolve(code string) (repository.URL, error) {
 	entry, err := s.repo.FindByCode(code)
 	if err != nil {
@@ -70,12 +66,10 @@ func (s *URLService) Resolve(code string) (repository.URL, error) {
 	return entry, nil
 }
 
-// Stats retorna os dados de uma URL pelo código
 func (s *URLService) Stats(code string) (repository.URL, error) {
 	return s.repo.FindByCode(code)
 }
 
-// ListAll retorna todas as URLs cadastradas
 func (s *URLService) ListAll() []repository.URL {
 	return s.repo.ListAll()
 }
