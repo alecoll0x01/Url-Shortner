@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/alecoll0x01/internal/repository"
+	"github.com/alecoll0x01/url-shortener/internal/repository"
 )
 
 var (
